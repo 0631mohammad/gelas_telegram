@@ -1,0 +1,125 @@
+package org.gelas.Pouya.utils.shamsicalendars;
+
+import android.annotation.SuppressLint;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TimeZone;
+
+@SuppressLint({"UseValueOf"})
+public class ShamsiCalendar {
+    public static final int CURRENT_CENTURY = 13;
+    private static final String[] shamsiMonths;
+    private static final String[] shamsiMonthsEn;
+    private static final String[] shamsiWeekDays;
+    private static final Map shamsiWeekDaysMap;
+
+    static {
+        shamsiWeekDays = new String[]{"\u0634\u0646\u0628\u0647", "\u06cc\u06a9\u0634\u0646\u0628\u0647", "\u062f\u0648\u0634\u0646\u0628\u0647", "\u0633\u0647 \u0634\u0646\u0628\u0647", "\u0686\u0647\u0627\u0631\u0634\u0646\u0628\u0647", "\u067e\u0646\u062c \u0634\u0646\u0628\u0647", "\u062c\u0645\u0639\u0647"};
+        shamsiMonths = new String[]{"\u0641\u0631\u0648\u0631\u062f\u06cc\u0646", "\u0627\u0631\u062f\u06cc\u0628\u0647\u0634\u062a", "\u062e\u0631\u062f\u0627\u062f", "\u062a\u06cc\u0631", "\u0645\u0631\u062f\u0627\u062f", "\u0634\u0647\u0631\u06cc\u0648\u0631", "\u0645\u0647\u0631", "\u0622\u0628\u0627\u0646", "\u0622\u0630\u0631", "\u062f\u06cc", "\u0628\u0647\u0645\u0646", "\u0627\u0633\u0641\u0646\u062f"};
+        shamsiMonthsEn = new String[]{"Farvardin", "Ordibehesht", "Khordad", "Tir", "Mordad", "Shahrivar", "Mehr", "Aban", "Azar", "Dey", "Bahman", "Esfand"};
+        shamsiWeekDaysMap = new HashMap();
+        shamsiWeekDaysMap.put(new Integer(7), shamsiWeekDays[0]);
+        shamsiWeekDaysMap.put(new Integer(1), shamsiWeekDays[1]);
+        shamsiWeekDaysMap.put(new Integer(2), shamsiWeekDays[2]);
+        shamsiWeekDaysMap.put(new Integer(3), shamsiWeekDays[3]);
+        shamsiWeekDaysMap.put(new Integer(4), shamsiWeekDays[4]);
+        shamsiWeekDaysMap.put(new Integer(5), shamsiWeekDays[5]);
+        shamsiWeekDaysMap.put(new Integer(6), shamsiWeekDays[6]);
+    }
+
+    public static ShamsiDate dateToShamsi(Date date) {
+        Roozh roozh=new Roozh();
+        roozh.GregorianToPersian(date.getYear(),date.getMonth(),date.getDay());
+        int l2=roozh.getMonth();
+        int i=0;
+        int i2=0;
+        int i3=0;
+        long dSTSavings = (((long) (TimeZone.getDefault().inDaylightTime(date) ? TimeZone.getDefault().getDSTSavings() : 0)) + date.getTime()) - new Date("01/01/1900").getTime();
+        long j = dSTSavings / 1000;
+        int i4 = (int) (j % 60);
+        j /= 60;
+        int i5 = (int) (j % 60);
+        int i6 = (int) ((j / 60) % 24);
+        long j2 = dSTSavings / 86400000;
+        if (j2 <= 78) {
+            i = (short) ((int) (((10 + j2) / 30) + 10));
+            i2 = (short) ((int) (((j2 + 10) % 30) + 1));
+            i3 = 1278;
+        } else {
+            j = j2 - 78;
+            int i7 = 1279;
+            while (true) {
+                j2 = ((long) (i7 + 11)) % 33;
+                i3 = (j2 == 32 || j2 % 4 != 0) ? 0 : 1;
+                if (j <= ((long) (i3 + 365))) {
+                    break;
+                }
+                j -= (long) (i3 + 365);
+                i7 = (short) (i7 + 1);
+            }
+            short s;
+            if (j <= 186) {
+                i2 = (short) ((int) (((j - 1) % 31) + 1));
+                s = (short) ((int) (((j - 1) / 31) + 1));
+                i3 = i7;
+            } else {
+                i2 = (short) ((int) ((((j - 1) - 186) % 30) + 1));
+                s = (short) ((int) ((((j - 1) - 186) / 30) + 7));
+                i3 = i7;
+            }
+        }
+        return new ShamsiDate(i3, l2, i2, i6, i5, i4);
+    }
+
+    public static int getDaysInMonth(ShamsiDate shamsiDate) {
+        if (shamsiDate.getMonth() < 7) {
+            return 31;
+        }
+        if (shamsiDate.getMonth() < 12) {
+            return 30;
+        }
+        Date shamsiToDate = shamsiToDate(new ShamsiDate(shamsiDate.getYear(), shamsiDate.getMonth(), 29));
+        Calendar instance = Calendar.getInstance();
+        instance.setTime(shamsiToDate);
+        instance.add(Calendar.DAY_OF_MONTH, 1);
+        return dateToShamsi(instance.getTime()).getMonth() != 12 ? 29 : 30;
+    }
+
+    public static String getShamsiMonth(int i) {
+        return (i >= 1 || i <= 12) ? shamsiMonths[i - 1] : null;
+    }
+
+    public static String getShamsiMonthEn(int i) {
+        return (i >= 1 || i <= 12) ? shamsiMonthsEn[i - 1] : null;
+    }
+
+    public static String[] getShamsiMonths() {
+        return shamsiMonths;
+    }
+
+    public static String getShamsiWeekDay(int i) {
+        return (i < 0 || i > 6) ? null : shamsiWeekDays[i];
+    }
+
+    public static String[] getShamsiWeekDays() {
+        return shamsiWeekDays;
+    }
+
+    public static Map getShamsiWeekDaysMap() {
+        return shamsiWeekDaysMap;
+    }
+
+    public static Date shamsiToDate(ShamsiDate shamsiDate) {
+        int month = shamsiDate.getMonth() >= 7 ? (((shamsiDate.getMonth() - 7) * 30) + 186) + shamsiDate.getDay() : ((shamsiDate.getMonth() - 1) * 31) + shamsiDate.getDay();
+        long j = shamsiDate.getYear() == 1278 ? (long) (month - 287) : 79;
+        for (int i = 1279; i < shamsiDate.getYear(); i++) {
+            long j2 = ((long) (i + 11)) % 33;
+            Object obj = (j2 == 32 || j2 % 4 != 0) ? null : 1;
+            j = j + 365;
+        }
+        Date date = new Date(new Date("01/01/1900").getTime() + ((((((long) month) + j) - 1) * 86400000) + ((long) ((((shamsiDate.getHour() * 3600) * 1000) + ((shamsiDate.getMinute() * 60) * 1000)) + (shamsiDate.getSecond() * 1000)))));
+        return TimeZone.getDefault().inDaylightTime(date) ? new Date(date.getTime() - ((long) TimeZone.getDefault().getDSTSavings())) : date;
+    }
+}
